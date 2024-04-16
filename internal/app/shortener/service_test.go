@@ -62,7 +62,7 @@ func TestService_ShrtByUrl_Creating(t *testing.T) {
 
 	res := []string{url1, url2, url3}
 	for _, u := range res {
-		assert.Len(t, u, shortLen)
+		assert.Len(t, u, ShortLen)
 	}
 
 	assert.NotEqual(t, url1, url2)
