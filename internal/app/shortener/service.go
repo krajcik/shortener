@@ -10,6 +10,8 @@ var (
 	AlreadyExistsError = fmt.Errorf("rep:already exists")
 )
 
+const shortLen = 11
+
 type Repository interface {
 	Save(url *Url) error
 	GetByUrl(url string) (*Url, error)
@@ -24,7 +26,7 @@ func (s *Service) ShrtByUrl(url string) (string, error) {
 	shrt, err := s.r.GetByUrl(url)
 	if err != nil {
 		if errors.Is(err, NotFoundError) {
-			newUrl := NewUrl(url, randomString(7))
+			newUrl := NewUrl(url, randomString(shortLen))
 			err := s.r.Save(newUrl)
 			if err != nil {
 				return "", err
@@ -49,9 +51,4 @@ func (s *Service) UrlByShrt(shrt string) (string, error) {
 
 func NewService(r Repository) *Service {
 	return &Service{r: r}
-}
-
-type Shortener interface {
-	ShrtByUrl(url string) (string, error)
-	UrlByShrt(shrt string) (string, error)
 }
