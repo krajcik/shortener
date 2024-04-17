@@ -9,8 +9,6 @@ import (
 
 func GetShrt(s *shortener.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
 		url := strings.Trim(r.URL.Path, "/")
 		shrt, err := s.UrlByShrt(url)
 
@@ -23,7 +21,8 @@ func GetShrt(s *shortener.Service) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Location", shrt)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 		_, _ = w.Write([]byte(shrt))
 	}
 }

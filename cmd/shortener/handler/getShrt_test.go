@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
 	"krajcik/shortener/internal/app/shortener"
 	"net/http"
 	"net/http/httptest"
@@ -17,8 +16,8 @@ func TestGetShrt(t *testing.T) {
 		post string
 	}
 	type want struct {
-		code        int
-		contentType string
+		code     int
+		location string
 	}
 	tests := []struct {
 		name string
@@ -29,16 +28,16 @@ func TestGetShrt(t *testing.T) {
 			name: "404",
 			args: args{false, "https://google.com"},
 			want: want{
-				code:        http.StatusNotFound,
-				contentType: "text/plain; charset=utf-8",
+				code:     http.StatusNotFound,
+				location: "",
 			},
 		},
 		{
 			name: "suc",
 			args: args{true, "https://google.com"},
 			want: want{
-				code:        http.StatusOK,
-				contentType: "text/plain; charset=utf-8",
+				code:     http.StatusTemporaryRedirect,
+				location: "https://google.com",
 			},
 		},
 	}
@@ -48,7 +47,6 @@ func TestGetShrt(t *testing.T) {
 			shrt := ""
 			if tt.args.flag {
 				shrt, _ = s.ShrtByUrl(tt.args.post)
-
 			}
 
 			request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%s", shrt), nil)
@@ -58,14 +56,9 @@ func TestGetShrt(t *testing.T) {
 			res := w.Result()
 			// проверяем код ответа
 			require.Equal(t, tt.want.code, res.StatusCode)
-			// получаем и проверяем тело запроса
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
-			if res.StatusCode < 300 {
-				assert.Equal(t, tt.args.post, string(resBody))
+			if tt.want.location != "" {
+				assert.Equal(t, tt.want.location, res.Header.Get("Location"))
 			}
 		})
 	}
