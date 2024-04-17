@@ -53,6 +53,7 @@ func TestGetShrt(t *testing.T) {
 			w := httptest.NewRecorder()
 			GetShrt(s)(w, request)
 
+			defer w.Result().Body.Close()
 			res := w.Result()
 			// проверяем код ответа
 			require.Equal(t, tt.want.code, res.StatusCode)
