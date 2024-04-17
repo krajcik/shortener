@@ -8,31 +8,31 @@ func NewRepository() *MemRepository {
 	return &MemRepository{r: make(map[string]string)}
 }
 
-func (r *MemRepository) Save(url *Url) error {
-	if _, ok := r.r[url.Url]; ok {
-		return AlreadyExistsError
+func (r *MemRepository) Save(url *URL) error {
+	if _, ok := r.r[url.URL]; ok {
+		return ErrAlreadyExists
 	}
 
-	r.r[url.Url] = url.ShortenedUrl
+	r.r[url.URL] = url.ShortenedURL
 
 	return nil
 }
 
-func (r *MemRepository) GetByUrl(url string) (*Url, error) {
+func (r *MemRepository) GetByURL(url string) (*URL, error) {
 	s, ok := r.r[url]
 	if !ok {
-		return nil, NotFoundError
+		return nil, ErrNotFound
 	}
 
-	return NewUrl(url, s), nil
+	return NewURL(url, s), nil
 }
 
-func (r *MemRepository) GetByShortCode(code string) (*Url, error) {
+func (r *MemRepository) GetByShortCode(code string) (*URL, error) {
 	for u, s := range r.r {
 		if s == code {
-			return NewUrl(u, s), nil
+			return NewURL(u, s), nil
 		}
 	}
 
-	return nil, NotFoundError
+	return nil, ErrNotFound
 }

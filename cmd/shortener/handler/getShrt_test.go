@@ -46,7 +46,7 @@ func TestGetShrt(t *testing.T) {
 			s := shortener.NewService(shortener.NewRepository())
 			shrt := ""
 			if tt.args.flag {
-				shrt, _ = s.ShrtByUrl(tt.args.post)
+				shrt, _ = s.ShrtByURL(tt.args.post)
 			}
 
 			request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%s", shrt), nil)

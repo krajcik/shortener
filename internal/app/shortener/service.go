@@ -6,47 +6,47 @@ import (
 )
 
 var (
-	NotFoundError      = fmt.Errorf("rep:not found")
-	AlreadyExistsError = fmt.Errorf("rep:already exists")
+	ErrNotFound      = fmt.Errorf("rep:not found")
+	ErrAlreadyExists = fmt.Errorf("rep:already exists")
 )
 
 const ShortLen = 11
 
 type Repository interface {
-	Save(url *Url) error
-	GetByUrl(url string) (*Url, error)
-	GetByShortCode(code string) (*Url, error)
+	Save(url *URL) error
+	GetByURL(url string) (*URL, error)
+	GetByShortCode(code string) (*URL, error)
 }
 
 type Service struct {
 	r Repository
 }
 
-func (s *Service) ShrtByUrl(url string) (string, error) {
-	shrt, err := s.r.GetByUrl(url)
+func (s *Service) ShrtByURL(url string) (string, error) {
+	shrt, err := s.r.GetByURL(url)
 	if err != nil {
-		if errors.Is(err, NotFoundError) {
-			newUrl := NewUrl(url, randomString(ShortLen))
-			err := s.r.Save(newUrl)
+		if errors.Is(err, ErrNotFound) {
+			newURL := NewURL(url, randomString(ShortLen))
+			err := s.r.Save(newURL)
 			if err != nil {
 				return "", err
 			}
-			return newUrl.ShortenedUrl, nil
+			return newURL.ShortenedURL, nil
 		} else {
 			return "", err
 		}
 	}
 
-	return shrt.ShortenedUrl, nil
+	return shrt.ShortenedURL, nil
 }
 
-func (s *Service) UrlByShrt(shrt string) (string, error) {
+func (s *Service) URLByShrt(shrt string) (string, error) {
 	code, err := s.r.GetByShortCode(shrt)
 	if err != nil {
 		return "", err
 	}
 
-	return code.Url, nil
+	return code.URL, nil
 }
 
 func NewService(r Repository) *Service {

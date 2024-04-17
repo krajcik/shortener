@@ -21,7 +21,7 @@ func PostShrt(s *shortener.Service) http.HandlerFunc {
 			panic(err)
 		}
 
-		res, err := s.ShrtByUrl(string(buf))
+		res, err := s.ShrtByURL(string(buf))
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

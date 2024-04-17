@@ -17,14 +17,14 @@ func TestMemRepository_GetByUrl(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *Url
+		want    *URL
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
 			"found",
 			fields{map[string]string{"a": "b", "foo": "bar", "bar": "foo", "lorem": "ipsum"}},
 			args{"foo"},
-			&Url{"foo", "bar"},
+			&URL{"foo", "bar"},
 			assert.NoError,
 		},
 		{
@@ -45,14 +45,14 @@ func TestMemRepository_GetByUrl(t *testing.T) {
 			"empty url",
 			fields{map[string]string{"": "bar"}},
 			args{""},
-			&Url{"", "bar"},
+			&URL{"", "bar"},
 			assert.NoError,
 		},
 		{
 			"empty shrt",
 			fields{map[string]string{"foo": ""}},
 			args{"foo"},
-			&Url{"foo", ""},
+			&URL{"foo", ""},
 			assert.NoError,
 		},
 	}
@@ -61,16 +61,16 @@ func TestMemRepository_GetByUrl(t *testing.T) {
 			r := &MemRepository{
 				r: tt.fields.r,
 			}
-			got, err := r.GetByUrl(tt.args.url)
-			if !tt.wantErr(t, err, fmt.Sprintf("GetByUrl(%v)", tt.args.url)) {
+			got, err := r.GetByURL(tt.args.url)
+			if !tt.wantErr(t, err, fmt.Sprintf("GetByURL(%v)", tt.args.url)) {
 				return
 			}
 
 			if err != nil {
-				assert.ErrorIs(t, err, NotFoundError)
+				assert.ErrorIs(t, err, ErrNotFound)
 				return
 			}
-			assert.Equalf(t, tt.want, got, "GetByUrl(%v)", tt.args.url)
+			assert.Equalf(t, tt.want, got, "GetByURL(%v)", tt.args.url)
 		})
 	}
 }
@@ -86,14 +86,14 @@ func TestMemRepository_GetByShortCode(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *Url
+		want    *URL
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
 			"found",
 			fields{map[string]string{"a": "b", "foo": "bar", "bar": "foo", "lorem": "ipsum"}},
 			args{"bar"},
-			&Url{"foo", "bar"},
+			&URL{"foo", "bar"},
 			assert.NoError,
 		},
 		{
@@ -107,7 +107,7 @@ func TestMemRepository_GetByShortCode(t *testing.T) {
 			"empty",
 			fields{map[string]string{"a": "b", "foo": "", "bar": "foo", "lorem": "ipsum"}},
 			args{""},
-			&Url{"foo", ""},
+			&URL{"foo", ""},
 			assert.NoError,
 		},
 	}
@@ -123,7 +123,7 @@ func TestMemRepository_GetByShortCode(t *testing.T) {
 			}
 
 			if err != nil {
-				assert.ErrorIs(t, err, NotFoundError)
+				assert.ErrorIs(t, err, ErrNotFound)
 				return
 			}
 			assert.Equalf(t, tt.want, got, "GetByShortCode(%v)", tt.args.code)
@@ -136,7 +136,7 @@ func TestMemRepository_Save(t *testing.T) {
 		r map[string]string
 	}
 	type args struct {
-		url *Url
+		url *URL
 	}
 	tests := []struct {
 		name     string
@@ -148,16 +148,16 @@ func TestMemRepository_Save(t *testing.T) {
 		{
 			"success",
 			fields{map[string]string{"foo": "bar"}},
-			args{&Url{"new", "url"}},
+			args{&URL{"new", "url"}},
 			assert.NoError,
 			nil,
 		},
 		{
 			"already exists",
 			fields{map[string]string{"foo": "bar"}},
-			args{&Url{"foo", "baz"}},
+			args{&URL{"foo", "baz"}},
 			assert.Error,
-			AlreadyExistsError,
+			ErrAlreadyExists,
 		},
 	}
 	for _, tt := range tests {
@@ -165,9 +165,9 @@ func TestMemRepository_Save(t *testing.T) {
 			r := &MemRepository{
 				r: tt.fields.r,
 			}
-			argUrl := tt.args.url.Url
+			argUrl := tt.args.url.URL
 			err := r.Save(tt.args.url)
-			url, _ := r.GetByUrl(argUrl)
+			url, _ := r.GetByURL(argUrl)
 			if !tt.wantErr(t, err, fmt.Sprintf("Save(%v)", tt.args.url)) {
 				return
 			}

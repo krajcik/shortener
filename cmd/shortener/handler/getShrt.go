@@ -10,10 +10,10 @@ import (
 func GetShrt(s *shortener.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url := strings.Trim(r.URL.Path, "/")
-		shrt, err := s.UrlByShrt(url)
+		shrt, err := s.URLByShrt(url)
 
 		if err != nil {
-			if errors.Is(err, shortener.NotFoundError) {
+			if errors.Is(err, shortener.ErrNotFound) {
 				http.NotFound(w, r)
 				return
 			}
