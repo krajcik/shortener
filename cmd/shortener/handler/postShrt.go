@@ -29,7 +29,7 @@ func PostShrt(s *shortener.Service) http.HandlerFunc {
 			return
 		}
 
-		res = fmt.Sprintf("%s/%s", r.Host, res)
+		res = fmt.Sprintf("http://%s/%s", r.Host, res)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 		_, err = w.Write([]byte(res))
