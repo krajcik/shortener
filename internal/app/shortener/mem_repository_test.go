@@ -165,9 +165,9 @@ func TestMemRepository_Save(t *testing.T) {
 			r := &MemRepository{
 				r: tt.fields.r,
 			}
-			argUrl := tt.args.url.URL
+			argURL := tt.args.url.URL
 			err := r.Save(tt.args.url)
-			url, _ := r.GetByURL(argUrl)
+			url, _ := r.GetByURL(argURL)
 			if !tt.wantErr(t, err, fmt.Sprintf("Save(%v)", tt.args.url)) {
 				return
 			}

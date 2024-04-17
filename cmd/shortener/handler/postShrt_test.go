@@ -50,7 +50,7 @@ func TestPostShrt(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
-			assert.Len(t, string(resBody), shortener.ShortLen)
+			assert.Len(t, string(resBody), shortener.ShortLen+len(request.Host)+1)
 			assert.NotEqual(t, tt.args.post, string(resBody))
 		})
 	}
