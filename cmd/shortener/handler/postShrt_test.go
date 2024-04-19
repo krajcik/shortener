@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"krajcik/shortener/cmd/shortener/config"
 	"krajcik/shortener/internal/app/shortener"
 	"net/http"
 	"net/http/httptest"
@@ -39,7 +40,7 @@ func TestPostShrt(t *testing.T) {
 			s := shortener.NewService(shortener.NewRepository())
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.args.post))
 			w := httptest.NewRecorder()
-			PostShrt(s)(w, request)
+			PostShrt(s, &config.Params{})(w, request)
 
 			res := w.Result()
 			// проверяем код ответа

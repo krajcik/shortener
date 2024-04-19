@@ -3,15 +3,19 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"krajcik/shortener/cmd/shortener/config"
 	"krajcik/shortener/cmd/shortener/handler"
 	"krajcik/shortener/internal/app/shortener"
 	"net/http"
 	"time"
 )
 
+var params *config.Params
+
 var service = shortener.NewService(shortener.NewRepository())
 
 func main() {
+	params = config.Create()
 	if err := run(); err != nil {
 		panic(err)
 	}
@@ -19,7 +23,7 @@ func main() {
 
 func run() error {
 
-	return http.ListenAndServe(":8080", router())
+	return http.ListenAndServe(params.A, router())
 }
 
 func router() chi.Router {
@@ -35,7 +39,7 @@ func router() chi.Router {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/{shrt}", handler.GetShrt(service))
-	r.Post("/", handler.PostShrt(service))
+	r.Post("/", handler.PostShrt(service, params))
 
 	return r
 }
