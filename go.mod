@@ -5,6 +5,7 @@ go 1.21
 require github.com/stretchr/testify v1.9.0
 
 require (
+	github.com/caarlos0/env/v11 v11.0.0
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-resty/resty/v2 v2.12.0
 )

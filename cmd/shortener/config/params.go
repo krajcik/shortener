@@ -1,6 +1,6 @@
 package config
 
 type Params struct {
-	A string
-	B string
+	A string `env:SERVER_ADDRESS`
+	B string `env:BASE_URL`
 }
