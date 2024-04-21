@@ -37,7 +37,6 @@ func PostShrt(s *shortener.Service, p *config.Params) http.HandlerFunc {
 			host = p.B
 		}
 		res = fmt.Sprintf("%s/%s", host, res)
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 		_, err = w.Write([]byte(res))
 		if err != nil {

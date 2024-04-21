@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"krajcik/shortener/cmd/shortener/config"
 	"krajcik/shortener/cmd/shortener/handler"
+	"krajcik/shortener/cmd/shortener/handler/api"
 	"krajcik/shortener/internal/app/shortener"
 	internalmiddleware "krajcik/shortener/internal/middleware"
 	"net/http"
@@ -45,12 +46,33 @@ func router() chi.Router {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(internalmiddleware.Logger(logger, ""))
 	r.Use(middleware.NoCache)
-	r.Use(middleware.SetHeader("Content-Type", "plain/text; charset=utf-8"))
+	r.Use(middleware.SetHeader("Content-Type", "text/plain; charset=utf-8"))
 	r.Use(middleware.Recoverer)
 
 	r.Get("/{shrt}", handler.GetShrt(service))
 	r.Post("/", handler.PostShrt(service, params))
 
+	r.Mount("/api", apiRouter())
+
+	return r
+}
+
+func apiRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.SetHeader("Content-Type", "application/json; charset=utf-8"))
+	r.Use(middleware.AllowContentType("application/json"))
+	shrtHandler := &api.PostShrtHandler{
+		S: service,
+		P: params,
+		L: logger,
+	}
+	r.Post("/shorten", http.HandlerFunc(shrtHandler.PostShrt))
+
+	//r.Route("/{articleID}", func(r chi.Router) {
+	//	r.Get("/", getArticle)
+	// r.Put("/", updateArticle)
+	// r.Delete("/", deleteArticle)
+	//})
 	return r
 }
 
