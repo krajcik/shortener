@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"go.uber.org/zap"
+	"net/http"
+	"time"
+
 	"krajcik/shortener/cmd/shortener/config"
 	"krajcik/shortener/cmd/shortener/handler"
 	"krajcik/shortener/cmd/shortener/handler/api"
 	"krajcik/shortener/internal/app/shortener"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
+
+	gzm "krajcik/shortener/cmd/shortener/middleware/gzip"
 	internalmiddleware "krajcik/shortener/internal/middleware"
-	"net/http"
-	"time"
 )
 
 var params *config.Params
@@ -47,7 +51,9 @@ func router() chi.Router {
 	r.Use(internalmiddleware.Logger(logger, ""))
 	r.Use(middleware.NoCache)
 	r.Use(middleware.SetHeader("Content-Type", "text/plain; charset=utf-8"))
+	r.Use(gzm.Middleware(logger))
 	r.Use(middleware.Recoverer)
+	//r.Use(middleware.Compress())
 
 	r.Get("/{shrt}", handler.GetShrt(service))
 	r.Post("/", handler.PostShrt(service, params))
