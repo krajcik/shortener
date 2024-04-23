@@ -3,8 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 func (h *PostShrtHandler) PostShrt(w http.ResponseWriter, r *http.Request) {
