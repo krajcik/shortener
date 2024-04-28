@@ -24,24 +24,33 @@ var logger *zap.Logger
 
 func main() {
 	if err := run(); err != nil {
+		//panic(err)
 		logger.Panic(err.Error())
 	}
 }
 
 func run() error {
-	params = config.Create()
-	return http.ListenAndServe(params.A, router())
-}
-
-func init() {
-	service = shortener.NewService(shortener.NewRepository())
-	err := initLogger("debug")
+	r, err := router()
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return http.ListenAndServe(params.A, r)
 }
 
-func router() chi.Router {
+func router() (chi.Router, error) {
+	params, err := config.Create()
+
+	if err != nil {
+		return nil, err
+	}
+
+	repository := shortener.NewRepository()
+
+	service = shortener.NewService(repository)
+	if err := initLogger("debug"); err != nil {
+		return nil, err
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -60,7 +69,7 @@ func router() chi.Router {
 
 	r.Mount("/api", apiRouter())
 
-	return r
+	return r, nil
 }
 
 func apiRouter() http.Handler {
