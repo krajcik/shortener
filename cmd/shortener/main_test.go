@@ -17,7 +17,9 @@ import (
 )
 
 func Test_run(t *testing.T) {
-	ts := httptest.NewServer(router())
+	r, err := router()
+	assert.NoError(t, err)
+	ts := httptest.NewServer(r)
 	defer ts.Close()
 
 	var testTable = []struct {
@@ -39,7 +41,9 @@ func Test_run(t *testing.T) {
 }
 
 func Test_run_api(t *testing.T) {
-	ts := httptest.NewServer(router())
+	r, err := router()
+	assert.NoError(t, err)
+	ts := httptest.NewServer(r)
 	defer ts.Close()
 	var testTable = []struct {
 		headers map[string]string

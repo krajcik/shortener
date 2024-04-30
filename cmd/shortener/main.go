@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -8,6 +10,8 @@ import (
 	"krajcik/shortener/cmd/shortener/handler"
 	"krajcik/shortener/cmd/shortener/handler/api"
 	"krajcik/shortener/internal/app/shortener"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,36 +21,50 @@ import (
 	internalmiddleware "krajcik/shortener/internal/middleware"
 )
 
-var params *config.Params
-
 var service *shortener.Service
 var logger *zap.Logger
 
 func main() {
 	if err := run(); err != nil {
+		//panic(err)
 		logger.Panic(err.Error())
 	}
 }
 
 func run() error {
-	params = config.Create()
-	return http.ListenAndServe(params.A, router())
-}
-
-func init() {
-	service = shortener.NewService(shortener.NewRepository())
-	err := initLogger("debug")
+	params, err := config.Create()
+	r, err := router(params)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return http.ListenAndServe(params.A, r)
 }
 
-func router() chi.Router {
+func router(params *config.Params) (chi.Router, error) {
+	db, err := db(params)
+	//defer func(db *sql.DB) {
+	//	err := db.Close()
+	//	if err != nil {
+	//		logger.Panic(err.Error())
+	//	}
+	//}(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	repository := shortener.NewRepository()
+
+	service = shortener.NewService(repository)
+	if err := initLogger("debug"); err != nil {
+		return nil, err
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.URLFormat)
-	r.Use(middleware.Heartbeat("/ping"))
+	r.Use(middleware.Heartbeat("/p"))
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(internalmiddleware.Logger(logger, ""))
 	r.Use(middleware.NoCache)
@@ -57,13 +75,22 @@ func router() chi.Router {
 
 	r.Get("/{shrt}", handler.GetShrt(service))
 	r.Post("/", handler.PostShrt(service, params))
+	r.Get("/ping", handler.Ping(db, logger))
 
-	r.Mount("/api", apiRouter())
+	r.Mount("/api", apiRouter(params))
 
-	return r
+	return r, nil
 }
 
-func apiRouter() http.Handler {
+func db(params *config.Params) (*sql.DB, error) {
+	db, err := sql.Open("pgx", params.DatabaseDsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db, err
+}
+
+func apiRouter(params *config.Params) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.SetHeader("Content-Type", "application/json; charset=utf-8"))
 	r.Use(middleware.AllowContentType("application/json"))
