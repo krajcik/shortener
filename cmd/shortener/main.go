@@ -26,34 +26,32 @@ var logger *zap.Logger
 
 func main() {
 	if err := run(); err != nil {
-		//panic(err)
-		logger.Panic(err.Error())
+		panic(err)
+		//logger.Panic(err.Error())
 	}
 }
 
 func run() error {
 	params, err := config.Create()
-	r, err := router(params)
+	db, err := db(params)
+	if err != nil {
+		return err
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(db)
+	r, err := router(params, db)
 	if err != nil {
 		return err
 	}
 	return http.ListenAndServe(params.A, r)
 }
 
-func router(params *config.Params) (chi.Router, error) {
-	db, err := db(params)
-	//defer func(db *sql.DB) {
-	//	err := db.Close()
-	//	if err != nil {
-	//		logger.Panic(err.Error())
-	//	}
-	//}(db)
-
-	if err != nil {
-		return nil, err
-	}
-
-	repository := shortener.NewRepository()
+func router(params *config.Params, db *sql.DB) (chi.Router, error) {
+	repository := shortener.NewDbRepository(db)
 
 	service = shortener.NewService(repository)
 	if err := initLogger("debug"); err != nil {

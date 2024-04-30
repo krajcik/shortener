@@ -29,11 +29,11 @@ func (s *Service) ShrtByURL(url string) (string, error) {
 			newURL := NewURL(url, randomString(ShortLen))
 			err := s.r.Save(newURL)
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("save new url:%w", err)
 			}
 			return newURL.ShortenedURL, nil
 		} else {
-			return "", err
+			return "", errors.Join(errors.New("GetByURL before save"), err)
 		}
 	}
 
