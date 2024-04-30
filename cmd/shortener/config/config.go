@@ -25,14 +25,19 @@ func initEnv(p *Params) error {
 }
 
 func initFlags(p *Params) {
-	if p.A == "" && flag.Lookup("a") != nil {
+	if p.A == "" {
 		flag.StringVar(&p.A, "a", ":8080", "The address to listen on for HTTP requests.")
 	}
-	if p.B == "" && flag.Lookup("b") != nil {
+	if p.B == "" {
 		flag.StringVar(&p.B, "b", "", "Host for shorten url")
 	}
-	if p.FileStoragePath == "" && flag.Lookup("f") != nil {
+	if p.FileStoragePath == "" {
 		flag.StringVar(&p.FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
 	}
+
+	if p.DatabaseDsn == "" {
+		flag.StringVar(&p.DatabaseDsn, "d", "postgres://postgres:pgpass@localhost:5432/shortener", "Database DSN")
+	}
+
 	flag.Parse()
 }

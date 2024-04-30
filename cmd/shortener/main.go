@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,6 +11,8 @@ import (
 	"krajcik/shortener/cmd/shortener/handler/api"
 	"krajcik/shortener/internal/app/shortener"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -16,8 +20,6 @@ import (
 	gzm "krajcik/shortener/cmd/shortener/middleware/gzip"
 	internalmiddleware "krajcik/shortener/internal/middleware"
 )
-
-var params *config.Params
 
 var service *shortener.Service
 var logger *zap.Logger
@@ -30,15 +32,22 @@ func main() {
 }
 
 func run() error {
-	r, err := router()
+	params, err := config.Create()
+	r, err := router(params)
 	if err != nil {
 		return err
 	}
 	return http.ListenAndServe(params.A, r)
 }
 
-func router() (chi.Router, error) {
-	params, err := config.Create()
+func router(params *config.Params) (chi.Router, error) {
+	db, err := db(params)
+	//defer func(db *sql.DB) {
+	//	err := db.Close()
+	//	if err != nil {
+	//		logger.Panic(err.Error())
+	//	}
+	//}(db)
 
 	if err != nil {
 		return nil, err
@@ -55,7 +64,7 @@ func router() (chi.Router, error) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.URLFormat)
-	r.Use(middleware.Heartbeat("/ping"))
+	r.Use(middleware.Heartbeat("/p"))
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(internalmiddleware.Logger(logger, ""))
 	r.Use(middleware.NoCache)
@@ -66,13 +75,22 @@ func router() (chi.Router, error) {
 
 	r.Get("/{shrt}", handler.GetShrt(service))
 	r.Post("/", handler.PostShrt(service, params))
+	r.Get("/ping", handler.Ping(db, logger))
 
-	r.Mount("/api", apiRouter())
+	r.Mount("/api", apiRouter(params))
 
 	return r, nil
 }
 
-func apiRouter() http.Handler {
+func db(params *config.Params) (*sql.DB, error) {
+	db, err := sql.Open("pgx", params.DatabaseDsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db, err
+}
+
+func apiRouter(params *config.Params) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.SetHeader("Content-Type", "application/json; charset=utf-8"))
 	r.Use(middleware.AllowContentType("application/json"))
