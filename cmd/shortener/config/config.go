@@ -8,10 +8,10 @@ import (
 
 func Create() (*Params, error) {
 	p := &Params{}
+	initFlags(p)
 	if err := initEnv(p); err != nil {
 		return nil, err
 	}
-	initFlags(p)
 
 	return p, nil
 }
@@ -25,19 +25,9 @@ func initEnv(p *Params) error {
 }
 
 func initFlags(p *Params) {
-	if p.A == "" {
-		flag.StringVar(&p.A, "a", ":8080", "The address to listen on for HTTP requests.")
-	}
-	if p.B == "" {
-		flag.StringVar(&p.B, "b", "", "Host for shorten url")
-	}
-	if p.FileStoragePath == "" {
-		flag.StringVar(&p.FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
-	}
-
-	if p.DatabaseDsn == "" {
-		flag.StringVar(&p.DatabaseDsn, "d", "postgres://postgres:pgpass@localhost:5432/shortener", "Database DSN")
-	}
-
+	flag.StringVar(&p.A, "a", ":8080", "The address to listen on for HTTP requests.")
+	flag.StringVar(&p.B, "b", "", "Host for shorten url")
+	flag.StringVar(&p.FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
+	flag.StringVar(&p.DatabaseDsn, "d", "postgres://postgres:pgpass@localhost:5432/shortener", "Database DSN")
 	flag.Parse()
 }
