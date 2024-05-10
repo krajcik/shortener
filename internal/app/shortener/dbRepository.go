@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 )
@@ -19,6 +20,31 @@ func (d *DbRepository) Save(url *URL) error {
 		url.URL, url.ShortenedURL,
 	)
 	return err
+}
+
+func (d *DbRepository) SaveBatch(ctx context.Context, urls []*URL) error {
+	tx, err := d.db.BeginTx(ctx, nil)
+	defer tx.Rollback()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO url.url(full_url, short_url) VALUES($1, $2)`)
+	if err != nil {
+		return err
+	}
+	for _, url := range urls {
+		_, err := stmt.ExecContext(
+			ctx,
+			url.URL,
+			url.ShortenedURL,
+		)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	tx.Commit()
+	return nil
 }
 
 func (d *DbRepository) GetByURL(url string) (*URL, error) {

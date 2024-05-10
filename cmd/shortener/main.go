@@ -97,7 +97,13 @@ func apiRouter(params *config.Params) http.Handler {
 		P: params,
 		L: logger,
 	}
+	batchHandler := &api.ShortenBatchHandler{
+		S: service,
+		P: params,
+		L: logger,
+	}
 	r.Post("/shorten", http.HandlerFunc(shrtHandler.PostShrt))
+	r.Post("/shorten/batch", http.HandlerFunc(batchHandler.ShortenBatch))
 
 	//r.Route("/{articleID}", func(r chi.Router) {
 	//	r.Get("/", getArticle)
