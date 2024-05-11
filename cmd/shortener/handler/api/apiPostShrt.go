@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,7 +17,8 @@ func (h *PostShrtHandler) PostShrt(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.S.ShrtByURL(rm.URL)
 	if err != nil {
-		h.errServer(w, err)
+		h.errServer(w, errors.Join(errors.New("ShrtByURL service"), err))
+
 		return
 	}
 
@@ -57,6 +59,7 @@ func (h *PostShrtHandler) loadModel(w http.ResponseWriter, r *http.Request) (*Po
 func (h *PostShrtHandler) errServer(w http.ResponseWriter, err error) {
 	h.L.Error("apiPostShrt:", zap.Error(err))
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	panic(err)
 }
 
 type PostShrtReqModel struct {
