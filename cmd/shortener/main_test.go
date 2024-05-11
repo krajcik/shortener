@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"krajcik/shortener/cmd/shortener/config"
 	"krajcik/shortener/cmd/shortener/handler/api"
 
 	"github.com/go-resty/resty/v2"
@@ -17,7 +19,7 @@ import (
 )
 
 func Test_run(t *testing.T) {
-	r, err := router()
+	r, err := router(&config.Params{}, &sql.DB{})
 	assert.NoError(t, err)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -41,7 +43,7 @@ func Test_run(t *testing.T) {
 }
 
 func Test_run_api(t *testing.T) {
-	r, err := router()
+	r, err := router(&config.Params{}, &sql.DB{})
 	assert.NoError(t, err)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

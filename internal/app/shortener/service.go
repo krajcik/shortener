@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"errors"
 	"fmt"
 )
@@ -14,6 +15,7 @@ const ShortLen = 11
 
 type Repository interface {
 	Save(url *URL) error
+	SaveBatch(ctx context.Context, urls []*URL) error
 	GetByURL(url string) (*URL, error)
 	GetByShortCode(code string) (*URL, error)
 }
@@ -22,22 +24,34 @@ type Service struct {
 	r Repository
 }
 
-func (s *Service) ShrtByURL(url string) (string, error) {
-	shrt, err := s.r.GetByURL(url)
+func (s *Service) ShrtBatch(ctx context.Context, urls []string) error {
+	var batchToSave []*URL
+	for _, url := range urls {
+		newURL := NewURL(url, randomString(ShortLen))
+		batchToSave = append(batchToSave, newURL)
+	}
+	err := s.r.SaveBatch(ctx, batchToSave)
 	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			newURL := NewURL(url, randomString(ShortLen))
-			err := s.r.Save(newURL)
+		return err
+	}
+	return nil
+}
+
+func (s *Service) ShrtByURL(url string) (string, error) {
+	newURL := NewURL(url, randomString(ShortLen))
+	err := s.r.Save(newURL)
+	if err != nil {
+		if errors.Is(err, ErrAlreadyExists) {
+			byURL, err := s.r.GetByURL(url)
 			if err != nil {
 				return "", err
 			}
-			return newURL.ShortenedURL, nil
-		} else {
-			return "", err
+			return byURL.ShortenedURL, err
 		}
+		panic(err)
 	}
 
-	return shrt.ShortenedURL, nil
+	return newURL.ShortenedURL, nil
 }
 
 func (s *Service) URLByShrt(shrt string) (string, error) {

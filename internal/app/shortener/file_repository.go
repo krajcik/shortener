@@ -36,7 +36,7 @@ func (f *FileRepository) Save(url *URL) error {
 	defer func(w *bufio.Writer) {
 		err := w.Flush()
 		if err != nil {
-
+			panic(err)
 		}
 	}(f.w)
 	_, err = f.rf.Seek(0, io.SeekEnd)
@@ -59,14 +59,13 @@ func (f *FileRepository) GetByURL(url string) (*URL, error) {
 	for scanner.Scan() {
 		jsonString := scanner.Text()
 
-		unmarshalUrl := &URL{}
-		if err := json.Unmarshal([]byte(jsonString), unmarshalUrl); err != nil {
+		unmarshalURL := &URL{}
+		if err := json.Unmarshal([]byte(jsonString), unmarshalURL); err != nil {
 			panic(err)
-			return nil, err
 		}
 
-		if unmarshalUrl.URL == url {
-			return unmarshalUrl, nil
+		if unmarshalURL.URL == url {
+			return unmarshalURL, nil
 		}
 	}
 
@@ -85,14 +84,14 @@ func (f *FileRepository) GetByShortCode(code string) (*URL, error) {
 	for scanner.Scan() {
 		jsonString := scanner.Text()
 
-		unmarshalUrl := &URL{}
+		unmarshalURL := &URL{}
 		jsonString = jsonString[:len(jsonString)-1]
-		if err := json.Unmarshal([]byte(jsonString[:len(jsonString)-1]), unmarshalUrl); err != nil {
+		if err := json.Unmarshal([]byte(jsonString[:len(jsonString)-1]), unmarshalURL); err != nil {
 			return nil, err
 		}
 
-		if unmarshalUrl.ShortenedURL == code {
-			return unmarshalUrl, nil
+		if unmarshalURL.ShortenedURL == code {
+			return unmarshalURL, nil
 		}
 	}
 
