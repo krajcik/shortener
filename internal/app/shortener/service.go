@@ -27,15 +27,9 @@ type Service struct {
 func (s *Service) ShrtBatch(ctx context.Context, urls []string) error {
 	var batchToSave []*URL
 	for _, url := range urls {
-		_, err := s.r.GetByURL(url)
-		if err != nil {
-			if errors.Is(err, ErrNotFound) {
-				newURL := NewURL(url, randomString(ShortLen))
-				batchToSave = append(batchToSave, newURL)
-			}
-		}
+		newURL := NewURL(url, randomString(ShortLen))
+		batchToSave = append(batchToSave, newURL)
 	}
-
 	err := s.r.SaveBatch(ctx, batchToSave)
 	if err != nil {
 		return err
@@ -44,21 +38,20 @@ func (s *Service) ShrtBatch(ctx context.Context, urls []string) error {
 }
 
 func (s *Service) ShrtByURL(url string) (string, error) {
-	shrt, err := s.r.GetByURL(url)
+	newURL := NewURL(url, randomString(ShortLen))
+	err := s.r.Save(newURL)
 	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			newURL := NewURL(url, randomString(ShortLen))
-			err := s.r.Save(newURL)
+		if errors.Is(err, ErrAlreadyExists) {
+			byURL, err := s.r.GetByURL(url)
 			if err != nil {
-				return "", fmt.Errorf("save new url:%w", err)
+				return "", err
 			}
-			return newURL.ShortenedURL, nil
-		} else {
-			return "", errors.Join(errors.New("GetByURL before save"), err)
+			return byURL.ShortenedURL, err
 		}
+		panic(err)
 	}
 
-	return shrt.ShortenedURL, nil
+	return newURL.ShortenedURL, nil
 }
 
 func (s *Service) URLByShrt(shrt string) (string, error) {

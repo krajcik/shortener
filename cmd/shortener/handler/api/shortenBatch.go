@@ -27,6 +27,12 @@ func (h *ShortenBatchHandler) ShortenBatch(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		panic(err)
 	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte(`{"result":true}`))
+	if err != nil {
+		panic(err)
+	}
 }
 
 type ShortenBatchRequest struct {

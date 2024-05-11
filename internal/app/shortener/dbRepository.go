@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type DbRepository struct {
@@ -19,6 +23,12 @@ func (d *DbRepository) Save(url *URL) error {
 		"INSERT INTO url.url(full_url, short_url) VALUES ($1, $2);",
 		url.URL, url.ShortenedURL,
 	)
+	var pgErr *pgconn.PgError
+	if err != nil {
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			return fmt.Errorf("%w:%w", ErrAlreadyExists, pgErr)
+		}
+	}
 	return err
 }
 
@@ -28,7 +38,10 @@ func (d *DbRepository) SaveBatch(ctx context.Context, urls []*URL) error {
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO url.url(full_url, short_url) VALUES($1, $2)`)
+	stmt, err := tx.PrepareContext(
+		ctx,
+		`INSERT INTO url.url(full_url, short_url) VALUES($1, $2) ON CONFLICT (full_url) DO NOTHING;`,
+	)
 	if err != nil {
 		return err
 	}
